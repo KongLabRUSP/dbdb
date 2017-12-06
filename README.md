@@ -22,7 +22,7 @@ Where is the legend for RNA-seq files?
    
 2. All alignemnt files and documents are located here (4Tb internal drive):    
 */media/administrator/datastorage/Processed_BAM_Files/David_MethylSeq_Processed/BAM_Files*
-**
+**    
 NOTE: Redo realignment, get BAM files and deduplicate!   
 NOTE: some of the files were too large to push to GitHub; saved on the LAb230 machine in *data* folders.
 
