@@ -9,7 +9,7 @@
 ## Table of Contents
 [Files](#files)  
 [Daily Logs](#logs)   
-[Results](#results)  
+[Results](#results)   
 
 ## Files<a name="files"></a>
 FastQ file legend:    
