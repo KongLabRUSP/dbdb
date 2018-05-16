@@ -4,9 +4,11 @@
 # | Author: Davit Sargsyan                                                           |
 # | Created: 09/19/2017                                                              |
 # |----------------------------------------------------------------------------------|
+sink(file = "tmp/log_dbdb_rnaseq_analysis_v2.txt")
+
 # Header----
-# Save consol output to a log file
-# sink(file = "tmp/log_dbdb_rnaseq_analysis_v2.txt")
+# source("http://bioconductor.org/biocLite.R")
+# biocLite("ReactomePA")
 
 require(data.table)
 require(ggplot2)
@@ -14,7 +16,7 @@ require(ReactomePA)
 
 # Part I: Data----
 # Data Script: .../kidney.ro1/dbdb/source/dbdb_rnaseq_deseq2_v1.R
-load("dbdb/data/rna_seq/dbdb.rnaseq.deseq2.RData")
+load("data/rna_seq/dbdb.rnaseq.deseq2.RData")
 dt1
 
 # Keep DB vs. Control only----
@@ -68,7 +70,7 @@ get.genes <- unique(do.call("c", get.genes))
 
 genes.from.path <- unique(dt2[dt2$entraz_id%in% get.genes, ])
 write.csv(genes.from.path,
-          file = "dbdb/tmpdbdb_rna_genes.from.path.csv")
+          file = "tmp/tmpdbdb_rna_genes.from.path.csv")
 
 # CHECKPOINT: do the genes I found map to pathways correctly?
 m1 <- enrichPathway(gene = unique(genes.from.path$entraz_id),
@@ -81,7 +83,7 @@ t1
 barplot(m1, 
         showCategory = 50)
 
-tiff(filename = "dbdb/tmp/dbdb_rna_genes.from.path_pathways.tiff",
+tiff(filename = "tmp/dbdb_rna_genes.from.path_pathways.tiff",
      height = 6,
      width = 10,
      units = 'in',
@@ -121,7 +123,7 @@ p1 <- ggplot(data = tmp) +
         plot.title = element_text(hjust = 0.5))
 p1
 
-tiff(filename = "dbdb/tmp/dbdb_rna_genes.from.pathways_heatmap.tiff",
+tiff(filename = "tmp/dbdb_rna_genes.from.pathways_heatmap.tiff",
      height = 6,
      width = 5,
      units = 'in',
@@ -130,6 +132,7 @@ tiff(filename = "dbdb/tmp/dbdb_rna_genes.from.pathways_heatmap.tiff",
 print(p1)
 graphics.off()
 write.csv(genes.from.path,
-          file = "dbdb/tmp/dbdb_rna_genes.from.pathways_heatmap.csv")
+          file = "tmp/dbdb_rna_genes.from.pathways_heatmap.csv")
 
-# sink()
+sessionInfo()
+sink()

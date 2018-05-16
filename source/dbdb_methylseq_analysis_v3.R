@@ -1,13 +1,13 @@
-# |----------------------------------------------------------------------------------|
-# | Project:  Study of DiabetesDb/Db                                                 |
-# | Script:   Methyl-seq data analysis and visualization                             |
-# | Author:   Davit Sargsyan                                                         |
-# | Created:  09/23/2017                                                             |
-# |----------------------------------------------------------------------------------|
-# Header----
-# Save consol output to a log file
-# sink(file = "tmp/log_mes13_methylseq_data_analysis_v2.txt")
+# |---------------------------------------------------------------------------------|
+# | Project:  Study of DiabetesDb/Db                                                |
+# | Script:   Methyl-seq data analysis and visualization                            |
+# | Author:   Davit Sargsyan                                                        |
+# | Created:  09/23/2017                                                            |
+# | Modified: 05/15/2018 (DS): Cleaned V3 for RO1 submission                        |
+# |---------------------------------------------------------------------------------|
+sink(file = "tmp/log_mes13_methylseq_data_analysis_v3.txt")
 
+# Header----
 # Source: file:///C:/R/R-3.3.2/library/ChIPseeker/doc/ChIPseeker.html
 # Source: http://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html
 
@@ -18,14 +18,13 @@
 # biocLite("TxDb.Mmusculus.UCSC.mm9.knownGene",
 #          suppressUpdates = TRUE)
 # biocLite("org.Mm.eg.db")
-# biocLite("ReactomePA")
 
 require(data.table)
 require(ggplot2)
 require(ChIPseeker)
+# require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 require(TxDb.Mmusculus.UCSC.mm9.knownGene)
 require(knitr)
-require(ReactomePA)
 
 # Treatment legend----
 trt.names <- c("db/m,16w",
@@ -40,14 +39,11 @@ trt.names <- c("db/m,16w",
                "db/db,21w")
 
 # Load data----
-peakAnno1 <- annotatePeak(peak = "dbdb/data/methyl_seq/combined.dedup.csv", 
+peakAnno1 <- annotatePeak(peak = "data/methyl_seq/combined.dedup.csv", 
                           tssRegion = c(-3000, 3000), 
                           TxDb = TxDb.Mmusculus.UCSC.mm9.knownGene,
                           annoDb = "org.Mm.eg.db")
 dt1 <- data.table(as.data.frame(peakAnno1@anno@elementMetadata@listData))
-
-# dt1[, p.fdr := p.adjust(p = Control..Exptl.pval,
-#                         method = "fdr")]
 dt1
 
 # Remove unmapped regions
@@ -66,12 +62,12 @@ kable(data.table(table(substr(dt1$anno, 1, 9))))
   # |V1        |    N|
   # |:---------|----:|
   # |3' UTR    |  126|
-  # |5' UTR    |   53|
-  # |Distal In | 2318|
+  # |5' UTR    |   51|
+  # |Distal In | 2302|
   # |Downstrea |   83|
-  # |Exon (uc0 |  764|
-  # |Intron (u | 1400|
-  # |Promoter  | 8476|
+  # |Exon (uc0 |  760|
+  # |Intron (u | 1388|
+  # |Promoter  | 8445|
 
 # Separate Promoter, Body and Downstream; remove everything else
 # a. Promoter: up to 3kb upstream
@@ -130,11 +126,12 @@ colnames(t1) <- c("Gene Region",
 kable(t1)
   # |Gene Region | Total CpG Count| db/m,16w| db/m,16w| db/db,16w| db/db,16w| db/m,21w| db/m,21w| db/m,21w| db/db,21w| db/db,21w| db/db,21w|
   # |:-----------|---------------:|--------:|--------:|---------:|---------:|--------:|--------:|--------:|---------:|---------:|---------:|
-  # |Promoter    |           89043|      0.7|      0.7|       1.0|       0.8|      0.6|      0.9|      0.9|       0.7|       0.8|       0.7|
-  # |Body        |           18649|      0.9|      0.8|       1.3|       1.0|      0.8|      1.1|      1.1|       0.8|       0.9|       0.9|
-  # |Downstream  |           20414|      1.5|      1.4|       1.7|       1.6|      1.3|      1.7|      1.6|       1.3|       1.5|       1.5|
+  # |Promoter    |           88330|      0.5|      0.6|       0.8|       0.7|      0.5|      0.8|      0.8|       0.6|       0.6|       0.6|
+  # |Body        |           18405|      0.8|      0.8|       1.3|       1.0|      0.7|      1.1|      1.1|       0.8|       0.9|       0.9|
+  # |Downstream  |           20094|      1.3|      1.3|       1.6|       1.5|      1.2|      1.6|      1.5|       1.2|       1.4|       1.4|
+
 write.csv(t1,
-          file = "dbdb/tmp/t1.csv",
+          file = "tmp/t1.csv",
           row.names = FALSE)
 
 # Calculate percent methylation in each sample----
@@ -243,9 +240,6 @@ dt.gene <- data.table(gene = dt.gene$Group.1,
 names(dt.gene)[4:7] <- unique(trt.names)
 dt.gene
 
-# SAVE THIS VERSION
-dt2 <- dt.gene
-
 # NEW (09/27/2017): remove Ber and keep promoter only----
 dt.gene <- droplevels(dt.gene[dt.gene$reg == "Promoter", ])
 dt.gene
@@ -256,16 +250,7 @@ dt.gene.l <- melt.data.table(data = dt.gene,
                              measure.vars = 4:7,
                              variable.name = "Treatment",
                              value.name = "Methylation(%)")
-# dt.gene.l$gene.id <- paste(dt.gene.l $gene,
-#                            "(",
-#                            dt.gene.l $CpG,
-#                            " CpG)",
-#                            sep = "")
 dt.gene.l$Treatment <- factor(dt.gene.l$Treatment)
-# levels(dt.gene.l$Treatment) <- c("db/m, 16 weeks",
-#                                  "db/db, 16 weeks",
-#                                  "db/m, 21 weeks",
-#                                  "db/db, 21 weeks")
 summary(dt.gene.l)
 dt.gene.l
 
@@ -334,88 +319,16 @@ p2b
 
 # Save the tables----
 write.csv(dt.gene,
-          file = "dbdb/tmp/dt.gene.16w.csv")
- 
-# Genes with largest differences at 21 weeks (db/db - db/m methylation)----
-dt.gene$dbdb_dbm_21w <- dt.gene$`db/db,21w` - dt.gene$`db/m,21w`
-m.diff <- dt.gene[!is.nan(dbdb_dbm_21w), c(1, 2, 8)]
-m.diff <- m.diff[order(dbdb_dbm_21w), ]
-m.diff
+          file = "tmp/dt.gene.16w.csv")
 
-# Genes with largest change in methylation (db/db - db/m)----
-gene.sorted <- unique(as.character(m.diff$gene))
-
-# c. Highest Positive Difference at 21 weeks (db/db - db/m)----
-gene.up <- gene.sorted[(length(gene.sorted) - 19):length(gene.sorted)]
-tmp <- subset(dt.gene.l,
-              as.character(gene) %in% gene.up)
-tmp
-
-p2c <- ggplot(data = tmp) +
-  facet_wrap(~ reg,
-             #scales = "free_y",
-             nrow = 1) +
-  geom_tile(aes(x =  Treatment,
-                y = gene,
-                fill = `Methylation(%)`),
-            color = "black") +
-  scale_fill_gradient2(high = "red",
-                       limit = c(0, 100),
-                       name = "Methylation(%)") +
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete("Gene",
-                   expand = c(0, 0)) +
-  # ggtitle("Top 50 Genes With Increased Methylation \n Db/Db - Db/M, at 16 Weeks") +
-  theme(axis.text.x = element_text(angle = 30,
-                                   hjust = 1),
-        # legend.position = "top",
-        plot.title = element_text(hjust = 0.5))
-p2c
-
-# d. Genes with smallest change in methylation (db/db - db/m)----
-gene.dn <- gene.sorted[1:20]
-tmp <- subset(dt.gene.l,
-              as.character(gene) %in% gene.dn)
-tmp
-
-p2d <- ggplot(data = tmp) +
-  facet_wrap(~ reg,
-             #scales = "free_y",
-             nrow = 1) +
-  geom_tile(aes(x =  Treatment,
-                y = gene,
-                fill = `Methylation(%)`),
-            color = "black") +
-  scale_fill_gradient2(high = "red",
-                       limit = c(0, 100),
-                       name = "Methylation(%)") +
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete("Gene",
-                   expand = c(0, 0)) +
-  # ggtitle("Top 50 Genes With Decreased Methylation \n Db/Db - Db/M, at 16 Weeks") +
-  theme(axis.text.x = element_text(angle = 30,
-                                   hjust = 1),
-        # legend.position = "top",
-        plot.title = element_text(hjust = 0.5))
-p2d
-
-# Save the tables----
-write.csv(dt.gene,
-          file = "dbdb/tmp/dt.gene.csv")
-# tiff(filename = "mes13/tmp/top_meth_diff.tiff",
-#      height = 12,
-#      width = 12,
-#      units = 'in',
-#      res = 300,
-#      compression = "lzw+p")
-# gridExtra::grid.arrange(p2a, p2b, p2c, p2d, nrow = 2)
-# graphics.off()
-
-tiff(filename = "mes13/tmp/dbdb_top_meth_diff_16w.tiff",
+tiff(filename = "tmp/dbdb_top_meth_diff_16w.tiff",
      height = 5,
      width = 12,
      units = 'in',
      res = 300,
      compression = "lzw+p")
-gridExtra::grid.arrange(p2a, p2b, p1, nrow = 1)
+  gridExtra::grid.arrange(p2a, p2b, p1, nrow = 1)
 graphics.off()
+
+sessionInfo()
+sink()
