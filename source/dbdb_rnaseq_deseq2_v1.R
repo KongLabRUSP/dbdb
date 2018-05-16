@@ -4,10 +4,9 @@
 # | Author: Davit Sargsyan                                                           |
 # | Created: 09/19/2017                                                              |
 # |----------------------------------------------------------------------------------|
-# Header----
-# Save consol output to a log file
-# sink(file = "tmp/log_dbdb_rnaseq_analysis_v1.txt")
+sink(file = "tmp/log_dbdb_rnaseq_analysis_v1.txt")
 
+# Header----
 require(data.table)
 require(org.Mm.eg.db)
 require(DESeq2)
@@ -16,7 +15,7 @@ require(BiocParallel)
 # Load data----
 # ORIGINAL DATA SOURCE: /home/administrator/Documents/David_RNAseq_bgi/combraw.count
 # Created by David and Renyi, 07/27/2017
-dt1 <- read.table("dbdb/data/rna_seq/combraw.count",
+dt1 <- read.table("data/rna_seq/combraw.count",
                   sep = "\t",
                   header = TRUE,
                   stringsAsFactors = FALSE)
@@ -25,7 +24,7 @@ dt1 <- read.table("dbdb/data/rna_seq/combraw.count",
 colnames(dt1)[7:14] <- paste("DR", 
                              1:8, 
                              sep = "")
-
+dt1
 # Part I: Run DESeq2----
 # Specify sample groups
 grp <- data.frame(trt = rep(rep(c("Control",
@@ -59,8 +58,6 @@ dds <- DESeq(dds,
              fitType = "local",
              parallel = TRUE)
 resultsNames(dds)
-
-
 
 # Contrasts----
 # b. DB vs. Control at Week 16----
@@ -146,8 +143,9 @@ dt1
 
 # Save all results----
 save(dt1,
-     file = "dbdb/data/rna_seq/dbdb.rnaseq.deseq2.RData")
-write.csv(dt1,
-          file = "dbdb/data/rna_seq/dbdb.rnaseq.deseq2.csv")
+     file = "data/rna_seq/dbdb.rnaseq.deseq2.RData")
+# write.csv(dt1,
+#           file = "data/rna_seq/dbdb.rnaseq.deseq2.csv")
 
-# sink()
+sessionInfo()
+sink()

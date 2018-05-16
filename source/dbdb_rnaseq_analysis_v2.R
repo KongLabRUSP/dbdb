@@ -15,7 +15,7 @@ require(ggplot2)
 require(ReactomePA)
 
 # Part I: Data----
-# Data Script: .../kidney.ro1/dbdb/source/dbdb_rnaseq_deseq2_v1.R
+# Data Script: /source/dbdb_rnaseq_deseq2_v1.R
 load("data/rna_seq/dbdb.rnaseq.deseq2.RData")
 dt1
 

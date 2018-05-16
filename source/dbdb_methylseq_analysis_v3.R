@@ -4,6 +4,7 @@
 # | Author:   Davit Sargsyan                                                        |
 # | Created:  09/23/2017                                                            |
 # | Modified: 05/15/2018 (DS): Cleaned V3 for RO1 submission                        |
+# |           05/16/2018 (DS): New DNA data (combined_DD.csv); using nn10 annotation|
 # |---------------------------------------------------------------------------------|
 sink(file = "tmp/log_mes13_methylseq_data_analysis_v3.txt")
 
@@ -15,15 +16,14 @@ sink(file = "tmp/log_mes13_methylseq_data_analysis_v3.txt")
 # # Source: https://support.bioconductor.org/p/70093/
 # sudo R
 # source("http://bioconductor.org/biocLite.R")
-# biocLite("TxDb.Mmusculus.UCSC.mm9.knownGene",
+# biocLite("TxDb.Mmusculus.UCSC.mm10.knownGene",
 #          suppressUpdates = TRUE)
 # biocLite("org.Mm.eg.db")
 
 require(data.table)
 require(ggplot2)
 require(ChIPseeker)
-# require(TxDb.Mmusculus.UCSC.mm10.knownGene)
-require(TxDb.Mmusculus.UCSC.mm9.knownGene)
+require(TxDb.Mmusculus.UCSC.mm10.knownGene)
 require(knitr)
 
 # Treatment legend----
@@ -33,15 +33,15 @@ trt.names <- c("db/m,16w",
                "db/db,16w",
                "db/m,21w",
                "db/m,21w",
+               "db/db,21w",
+               "db/db,21w",
                "db/m,21w",
-               "db/db,21w",
-               "db/db,21w",
                "db/db,21w")
 
 # Load data----
-peakAnno1 <- annotatePeak(peak = "data/methyl_seq/combined.dedup.csv", 
+peakAnno1 <- annotatePeak(peak = "data/methyl_seq/combined_DD.csv", 
                           tssRegion = c(-3000, 3000), 
-                          TxDb = TxDb.Mmusculus.UCSC.mm9.knownGene,
+                          TxDb = TxDb.Mmusculus.UCSC.mm10.knownGene,
                           annoDb = "org.Mm.eg.db")
 dt1 <- data.table(as.data.frame(peakAnno1@anno@elementMetadata@listData))
 dt1
@@ -59,15 +59,15 @@ dt1 <- data.table(gene = dt1$SYMBOL,
 
 unique(dt1$anno)
 kable(data.table(table(substr(dt1$anno, 1, 9))))
-  # |V1        |    N|
-  # |:---------|----:|
-  # |3' UTR    |  126|
-  # |5' UTR    |   51|
-  # |Distal In | 2302|
-  # |Downstrea |   83|
-  # |Exon (uc0 |  760|
-  # |Intron (u | 1388|
-  # |Promoter  | 8445|
+  # |V1        |     N|
+  # |:---------|-----:|
+  # |3' UTR    |  4673|
+  # |5' UTR    |   803|
+  # |Distal In | 65941|
+  # |Downstrea |  2804|
+  # |Exon (uc0 | 12156|
+  # |Intron (u | 57938|
+  # |Promoter  | 84565|
 
 # Separate Promoter, Body and Downstream; remove everything else
 # a. Promoter: up to 3kb upstream
@@ -124,12 +124,11 @@ colnames(t1) <- c("Gene Region",
                   "Total CpG Count",
                   trt.names)
 kable(t1)
-  # |Gene Region | Total CpG Count| db/m,16w| db/m,16w| db/db,16w| db/db,16w| db/m,21w| db/m,21w| db/m,21w| db/db,21w| db/db,21w| db/db,21w|
-  # |:-----------|---------------:|--------:|--------:|---------:|---------:|--------:|--------:|--------:|---------:|---------:|---------:|
-  # |Promoter    |           88330|      0.5|      0.6|       0.8|       0.7|      0.5|      0.8|      0.8|       0.6|       0.6|       0.6|
-  # |Body        |           18405|      0.8|      0.8|       1.3|       1.0|      0.7|      1.1|      1.1|       0.8|       0.9|       0.9|
-  # |Downstream  |           20094|      1.3|      1.3|       1.6|       1.5|      1.2|      1.6|      1.5|       1.2|       1.4|       1.4|
-
+  # |Gene Region | Total CpG Count| db/m,16w| db/m,16w| db/db,16w| db/db,16w| db/m,21w| db/m,21w| db/db,21w| db/db,21w| db/m,21w| db/db,21w|
+  # |:-----------|---------------:|--------:|--------:|---------:|---------:|--------:|--------:|---------:|---------:|--------:|---------:|
+  # |Promoter    |         1361380|     11.0|     11.6|      10.2|      10.0|     11.1|     10.5|      10.9|      11.1|      8.2|      11.7|
+  # |Body        |          492022|     13.3|     13.8|      12.2|      12.1|     13.5|     12.6|      13.2|      13.4|      9.9|      14.2|
+  # |Downstream  |          478487|     13.3|     13.8|      12.2|      12.1|     13.5|     12.6|      13.2|      13.4|      9.8|      14.2|
 write.csv(t1,
           file = "tmp/t1.csv",
           row.names = FALSE)
@@ -138,26 +137,26 @@ write.csv(t1,
 # collapse samples
 dt.reg <- data.table(Region = dt.reg$Group.1,
                      CpG = dt.reg$CpG,
-                     `db_m_16w_N` = dt.reg$X2.O_S1_R1_001.N + 
-                       dt.reg$X2.R_S2_R1_001.N,
-                     `db_m_16w_X` = dt.reg$X2.O_S1_R1_001.X + 
-                       dt.reg$X2.R_S2_R1_001.X,
-                     `db_db_16w_N` = dt.reg$X4.L_S3_R1_001.N +
-                       dt.reg$X4.LL_S4_R1_001.N,
-                     `db_db_16w_X` = dt.reg$X4.L_S3_R1_001.X +
-                       dt.reg$X4.LL_S4_R1_001.X,
-                     `db_m_21w_N` = dt.reg$X6.L_S5_R1_001.N +
-                       dt.reg$X6.LL_S6_R1_001.N +
-                       dt.reg$X7.L_S1_R1_001.N,
-                     `db_m_21w_X` = dt.reg$X6.L_S5_R1_001.X +
-                       dt.reg$X6.LL_S6_R1_001.X +
-                       dt.reg$X7.L_S1_R1_001.X,
-                     `db_db_21w_N` = dt.reg$X5.O_S2_R1_001.N +
-                       dt.reg$X5.R_S7_R1_001.N +
-                       dt.reg$X5.RR_S8_R1_001.N,
-                     `db_db_21w_X` = dt.reg$X5.O_S2_R1_001.X +
-                       dt.reg$X5.R_S7_R1_001.X +
-                       dt.reg$X5.RR_S8_R1_001.X)
+                     `db_m_16w_N` = dt.reg$DD01.N + 
+                       dt.reg$DD02.N,
+                     `db_m_16w_X` = dt.reg$DD01.X + 
+                       dt.reg$DD02.X,
+                     `db_db_16w_N` = dt.reg$DD03.N +
+                       dt.reg$DD04.N,
+                     `db_db_16w_X` = dt.reg$DD03.X +
+                       dt.reg$DD04.X,
+                     `db_m_21w_N` = dt.reg$DD05.N +
+                       dt.reg$DD06.N +
+                       dt.reg$DD09.N,
+                     `db_m_21w_X` = dt.reg$DD05.X +
+                       dt.reg$DD06.X +
+                       dt.reg$DD09.X,
+                     `db_db_21w_N` = dt.reg$DD07.N +
+                       dt.reg$DD08.N +
+                       dt.reg$DD10.N,
+                     `db_db_21w_X` = dt.reg$DD07.X +
+                       dt.reg$DD08.X +
+                       dt.reg$DD10.X)
 
 dt.reg <- data.table(Region = dt.reg$Region,
                      CpG = dt.reg$CpG,
@@ -195,26 +194,26 @@ p1
 # Part II: gene methylation----
 # NOTE: collapse samples
 dt2 <- data.table(dt1[, 1:4],
-                  `db_m_16w_N` = dt1$X2.O_S1_R1_001.N + 
-                    dt1$X2.R_S2_R1_001.N,
-                  `db_m_16w_X` = dt1$X2.O_S1_R1_001.X + 
-                    dt1$X2.R_S2_R1_001.X,
-                  `db_db_16w_N` = dt1$X4.L_S3_R1_001.N +
-                    dt1$X4.LL_S4_R1_001.N,
-                  `db_db_16w_X` = dt1$X4.L_S3_R1_001.X +
-                    dt1$X4.LL_S4_R1_001.X,
-                  `db_m_21w_N` = dt1$X6.L_S5_R1_001.N +
-                    dt1$X6.LL_S6_R1_001.N +
-                    dt1$X7.L_S1_R1_001.N,
-                  `db_m_21w_X` = dt1$X6.L_S5_R1_001.X +
-                    dt1$X6.LL_S6_R1_001.X +
-                    dt1$X7.L_S1_R1_001.X,
-                  `db_db_21w_N` = dt1$X5.O_S2_R1_001.N +
-                    dt1$X5.R_S7_R1_001.N +
-                    dt1$X5.RR_S8_R1_001.N,
-                  `db_db_21w_X` = dt1$X5.O_S2_R1_001.X +
-                    dt1$X5.R_S7_R1_001.X +
-                    dt1$X5.RR_S8_R1_001.X)
+                  `db_m_16w_N` = dt1$DD01.N + 
+                    dt1$DD02.N,
+                  `db_m_16w_X` = dt1$DD01.X + 
+                    dt1$DD02.X,
+                  `db_db_16w_N` = dt1$DD03.N +
+                    dt1$DD04.N,
+                  `db_db_16w_X` = dt1$DD03.X +
+                    dt1$DD04.X,
+                  `db_m_21w_N` = dt1$DD05.N +
+                    dt1$DD06.N +
+                    dt1$DD09.N,
+                  `db_m_21w_X` = dt1$DD05.X +
+                    dt1$DD06.X +
+                    dt1$DD09.X,
+                  `db_db_21w_N` = dt1$DD07.N +
+                    dt1$DD08.N +
+                    dt1$DD10.N,
+                  `db_db_21w_X` = dt1$DD07.X +
+                    dt1$DD08.X +
+                    dt1$DD10.X)
 
 # Collapse by gene 
 out <- list()
